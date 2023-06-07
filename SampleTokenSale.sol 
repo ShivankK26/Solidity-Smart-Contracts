@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.16;
+
+// contract starts an abstract contract named ERC20. An abstract contract cannot be deployed on its own and is meant to be inherited by other contracts. The ERC20 contract defines two functions: transferFrom and decimals. The transferFrom function is used to transfer tokens from one address to another, and the decimals function returns the number of decimal places used by the token.
+abstract contract ERC20 { 
+    function transferFrom(address _from, address _to, uint256 _value) public virtual returns (bool success);
+    function decimals() public virtual view returns (uint8);
+}
+
+
+// TokenSale contract starts with the declaration of various state variables:
+// tokenPriceInWei: This variable represents the price of one token in Wei (the smallest unit of Ether).
+// token: This variable stores the instance of the ERC20 token contract.
+// tokenOwner: This variable stores the address of the token owner.
+contract TokenSale {
+    uint public tokenPriceInWei = 1 ether;
+
+    ERC20 public token;
+    address public tokenOwner;
+
+    constructor(address _token) { // constructor function is defined and takes an address _token as a parameter. Inside the constructor, the msg.sender (the one deploying the contract) is set as the tokenOwner address, and the token variable is assigned an instance of the ERC20 token contract at the given _token address.
+        tokenOwner = msg.sender;
+        token = ERC20(_token);
+    }
+
+    function purchaseACoffee() public payable {
+        require(msg.value >= tokenPriceInWei, "Not enough money sent");
+        uint tokensToTransfer = msg.value / tokenPriceInWei;
+        uint remainder = msg.value - tokensToTransfer * tokenPriceInWei;
+        token.transferFrom(tokenOwner, msg.sender, tokensToTransfer * 10 ** token.decimals()); // It calls the transferFrom function of the ERC20 token contract to transfer the specified number of tokens (tokensToTransfer * 10 ** token.decimals()) from the tokenOwner to the msg.sender.
+        payable(msg.sender).transfer(remainder); // Sending the rest of money back. Finally, it uses the payable function to transfer the remainder of Ether back to the msg.sender. 
+    }
+}
